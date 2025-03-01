@@ -1,31 +1,116 @@
 import { Button } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable } from 'react-beautiful-dnd';
 
 import TrelloList from './components/TrelloList';
 import React from 'react';
 
 import { mockData } from './mockData';
+import { IEventDragDrop, ITrello } from './types';
 
 function App() {
-  const [trello, setTrello] = React.useState(mockData)
+  const [trello, setTrello] = React.useState<ITrello>(mockData)
 
-  // using useCallback is optional
-  const onBeforeCapture = React.useCallback(() => {
-    /*...*/
-  }, []);
-  const onBeforeDragStart = React.useCallback(() => {
-    /*...*/
-  }, []);
-  const onDragStart = React.useCallback(() => {
-    /*...*/
-  }, []);
-  const onDragUpdate = React.useCallback(() => {
-    /*...*/
-  }, []);
-  const onDragEnd = React.useCallback(() => {
-    // the only one that is required
-  }, []);
+  // // using useCallback is optional
+  // const onBeforeCapture = React.useCallback((e) => {
+  //   /*...*/
+  //   console.log('onBeforeCapture', e)
+    
+  // }, []);
+
+  // const onBeforeDragStart = React.useCallback((e) => {
+  //   /*...*/
+
+  //   console.log('onBeforeDragStart', e)
+  // }, []);
+
+  // const onDragStart = React.useCallback((e) => {
+  //   /*...*/
+  //   console.log('onDragStart', e)
+  // }, []);
+
+  // const onDragUpdate = React.useCallback((e) => {
+  //   /*...*/
+  //   console.log('onDragUpdate', e)
+  // }, []);
+
+  const onDragEnd = React.useCallback((event: IEventDragDrop) => {
+    const { source, destination, type, draggableId } = event;
+    const sourceIndex = source.index;
+    const sourceDroppableId = source.droppableId;
+
+    const destinationIndex = destination.index;
+    const destinationDroppableId = destination.droppableId;
+
+    console.log('onDragEnd', {
+      event,
+      trello
+    })
+
+    if(!destination) return;
+
+    if(type === 'LIST') {
+      // ....
+      const newColumns = [...trello.columns];
+      // array.splice(): add, remove, update
+      newColumns.splice(sourceIndex, 1); // delete item
+      newColumns.splice(destinationIndex, 0, draggableId); // add item
+      setTrello(prevState => {
+        return {
+          ...prevState,
+          columns: newColumns
+        }
+      })
+
+      return;
+    }
+
+    // drag drop card same list
+    if(sourceDroppableId === destinationDroppableId) {
+      setTrello(prevState => {
+        const newCards = [...(prevState.lists as any)[sourceDroppableId].cards];
+        newCards.splice(sourceIndex, 1);
+        newCards.splice(destinationIndex, 0, draggableId);
+        return {
+          ...prevState,
+          lists: {
+            ...prevState.lists,
+            [sourceDroppableId]: {
+              ...(prevState.lists as any)[sourceDroppableId],
+              cards: newCards
+            }
+          }
+        }
+      })
+      return;
+    }
+
+    // drag drop card same list
+    setTrello(prevState => {
+      const newCardsSource = [...(prevState.lists as any)[sourceDroppableId].cards];
+      newCardsSource.splice(sourceIndex, 1);
+
+      const newCardsDestination = [...(prevState.lists as any)[destinationDroppableId].cards];
+      newCardsDestination.splice(destinationIndex, 0, draggableId);
+
+      return {
+        ...prevState,
+        lists: {
+          ...prevState.lists,
+          [sourceDroppableId]: {
+            ...(prevState.lists as any)[sourceDroppableId],
+            cards: newCardsSource
+          },
+          [destinationDroppableId]: {
+            ...(prevState.lists as any)[destinationDroppableId],
+            cards: newCardsDestination
+          },
+        }
+      }
+    })
+  }, [trello]);
+
+  console.log('render: ', trello)
 
   return (
     <>
@@ -43,10 +128,10 @@ function App() {
       <main>
         <div className="container">
           <DragDropContext
-            onBeforeCapture={onBeforeCapture}
-            onBeforeDragStart={onBeforeDragStart}
-            onDragStart={onDragStart}
-            onDragUpdate={onDragUpdate}
+            // onBeforeCapture={onBeforeCapture}
+            // onBeforeDragStart={onBeforeDragStart}
+            // onDragStart={onDragStart}
+            // onDragUpdate={onDragUpdate}
             onDragEnd={onDragEnd}
           >
             <Droppable droppableId="all-list" type="LIST" direction='horizontal'>

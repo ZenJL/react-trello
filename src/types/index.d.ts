@@ -18,3 +18,17 @@ export interface ITrello {
     [key as string]: ICard
   },
 }
+
+export interface IDropItem {
+  droppableId: string,
+  index: number
+}
+
+export interface IEventDragDrop {
+  destination: IDropItem,
+  draggableId: string,
+  mode: string,
+  reason: string,
+  source: IDropItem,
+  type: string
+}
